@@ -95,28 +95,6 @@ function update_config_files {
 	mv "$temp_fs_config_file" "$fs_config_file"  # 替换原配置文件
 	mv "$temp_file_contexts_file" "$file_contexts_file"
 
-	while read -r line; do
-		path=$(echo "$line" | awk '{print $1}')
-		if [[ "$path" == "/" || "$path" == "lost+found" || "$path" == "$partition/" || "$path" == "$partition/lost+found" ]]; then
-			continue
-		fi
-		if [[ ! " ${relative_paths[*]} " =~ " ${path} " ]]; then
-			sed -i "\|^$path\s|d" "$fs_config_file"  # 移除已删除文件的配置
-		fi
-	done <"$fs_config_file"
-
-	while read -r line; do
-		path=$(echo "$line" | awk '{print $1}')
-		if [[ "$path" == "/" || "$path" == "/lost\+found" || "$path" == "/$partition/" || "$path" == "/$partition/lost\+found" ]]; then
-			continue
-		fi
-		path=${path#/}
-		unescaped_path=$(echo "$path" | sed -e 's/\\\([+.\\[()（）]\)/\1/g' -e 's/\\]/]/g')
-		if [[ ! " ${relative_paths[*]} " =~ " ${unescaped_path} " ]]; then
-			sed -i "\|^/$path\s|d" "$file_contexts_file"  # 移除已删除文件上下文
-		fi
-	done <"$file_contexts_file"
-
 	sort "$fs_config_file" -o "$fs_config_file"  # 重新排序配置文件
 	sort "$file_contexts_file" -o "$file_contexts_file"  # 重新排序上下文文件
 }
